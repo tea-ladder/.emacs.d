@@ -3,3 +3,6 @@ auto-save-list/
 elpa/
 server/
 transient/
+company-statistics-cache.el
+fonts/
+straight/
