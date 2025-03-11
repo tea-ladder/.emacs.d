@@ -29,8 +29,22 @@
 ; ----
 ; UI
 ; ----
-(use-package nerd-icons)
-(use-package all-the-icons)
+;; icons
+(use-package nerd-icons
+  :custom
+  (nerd-icons-font-family "Hack Nerd Font Mono"))
+
+;; buff lines
+(use-package doom-modeline
+  :hook (after-init . doom-modeline-mode)
+  :config
+  (setq doom-modeline-icon t)
+  (setq doom-modeline-lsp-icon t)
+)
+;; 
+(use-package pulsar
+  :config
+  (pulsar-global-mode +1))
 
 ; ----
 ; filer
@@ -62,7 +76,7 @@
   (setq evil-want-keybinding nil)
   (define-prefix-command 'my-leader-map)
   :config
-  (evil-mode 1))
+  (evil-mode 1)
   ;; custom command
   (evil-ex-define-cmd "pyvenv" #'pyvenv-activate)
   (evil-ex-define-cmd "Reload" #'eval-buffer)
@@ -75,36 +89,40 @@
       "e"  'neotree-toggle
       "f"  'text-scale-adjust
   )
+  (defun bb/evil-delete (orig-fn beg end &optional type _ &rest args)
+    (apply orig-fn beg end type ?_ args))
+  (advice-add 'evil-delete :around 'bb/evil-delete))
 ;; evil-collection の設定
 (use-package evil-collection
   :after evil
   :config
   (evil-collection-init))
 
+
 ;; vertico の設定
 (use-package vertico
   :init
-  (vertico-mode))
+  (defvar +vertico-current-arrow t)
 
+  (cl-defmethod vertico--format-candidate :around
+    (cand prefix suffix index start &context ((and +vertico-current-arrow
+                                                   (not (bound-and-true-p vertico-flat-mode)))
+                                              (eql t)))
+    (setq cand (cl-call-next-method cand prefix suffix index start))
+    (if (bound-and-true-p vertico-grid-mode)
+        (if (= vertico--index index)
+            (concat (nerd-icons-faicon "nf-fa-hand_o_right") " " cand)
+          (concat #("_" 0 1 (display " ")) cand))
+      (if (= vertico--index index)
+          (concat " " (nerd-icons-faicon "nf-fa-hand_o_right") " " cand)
+        (concat "    " cand))))
+  (vertico-mode +1))
 ; ----
 ; theme
 ; ----
 (use-package kanagawa-themes
   :config
   (load-theme 'kanagawa-wave t))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(company-statistics company neotree all-the-icons nerd-icons kanagawa-themes vertico undo-fu magit git-gutter evil-collection)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(default ((t (:family "Hack Nerd Font Mono" :foundry "outline" :slant normal :weight regular :height 218 :width normal)))))
 
 ; ----
 ; LSP
@@ -128,76 +146,74 @@
 ; ----
 ; completion
 ; ----
-
-;; company ;; 
-(use-package company
-  :after company-statistics
-  :bind (("M-<tab>" . company-complete) ;; Tabで自動補完を起動する
-         :map company-active-map
-         ;; C-n, C-pで補完候補を次/前の候補を選択
-         ("M-n" . nil)                      ;; M-nで次の候補への移動をキャンセル
-         ("M-p" . nil)                      ;; M-pでの前の候補への移動をキャンセル
-         ("C-n" . company-select-next)      ;; 次の補完候補を選択
-         ("C-p" . company-select-previous);; 前の補完候補を選択
-         ("C-s" . company-filter-candidates) ;; C-sで絞り込む
-         :map company-search-map
-         ;; 検索候補の移動をC-nとC-pで移動する
-         ("C-n" . company-select-next)
-         ("C-p" . company-select-previous))
+(use-package corfu
+  :custom (
+           (corfu-auto t)
+           (corfu-auto-delay 0)
+           (corfu-auto-prefix 1)
+           (corfu-cycle t)
+           (corfu-on-exact-match nil)
+           (tab-always-indent 'complete)
+           ;; test
+           (corfu-scroll-margin 8)
+           )
+  :bind (nil
+         :map corfu-map
+         ("TAB" . corfu-insert)
+         ("<tab>" . corfu-insert)
+         ("<backtab>" . corfu-previous) 
+         ("RET" . nil )
+         ("<return>" . nil )
+         )
   :init
-  ;; 全バッファで有効にする
-  (global-company-mode)
+  (global-corfu-mode +1)
+  :hook (corfu-mode . corfu-popupinfo-mode)
+
   :config
-  (define-key emacs-lisp-mode-map (kbd "C-M-i") nil) ;; CUI版のためにemacs-lisp-modeでバインドされるC-M-iをアンバインド
-  (global-set-key (kbd "C-M-i") 'company-complete)   ;; CUI版ではM-<tab>はC-M-iに変換されるのでそれを利用
-  (setq completion-ignore-case t)
-  (setq company-idle-delay 0)                    ;; 待ち時間を0秒にする
-  (setq company-minimum-prefix-length 2)         ;; 補完できそうな文字が2文字以上入力されたら候補を表示
-  (setq company-selection-wrap-around t)         ;; 候補の一番下でさらに下に行こうとすると一番上に戻る
-  (setq company-transformers '(company-sort-by-occurrence company-sort-by-backend-importance))) ;; 利用頻度が高いものを候補の上に表示する
+  ;; java-mode などの一部のモードではタブに `c-indent-line-or-region` が割り当てられているので、
+  ;; 補完が出るように `indent-for-tab-command` に置き換える
+  ;(defun my/corfu-remap-tab-command ()
+  ;  (global-set-key [remap c-indent-line-or-region] #'indent-for-tab-command))
+  ;(add-hook 'java-mode-hook #'my/corfu-remap-tab-command)
 
-(use-package company-statistics
-  :init
-  (company-statistics-mode))
+  ;; ミニバッファー上でverticoによる補完が行われない場合、corfuの補完が出るようにします。
+  ;; https://github.com/minad/corfu#completing-in-the-minibuffer
+  (defun corfu-enable-always-in-minibuffer ()
+    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
+    (unless (or (bound-and-true-p mct--active)
+                (bound-and-true-p vertico--input))
+      ;; (setq-local corfu-auto nil) ;; Enable/disable auto completion
+      (setq-local corfu-echo-delay nil ;; Disable automatic echo and popup
+                  corfu-popupinfo-delay nil)
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
 
-;; auto-completeに近い挙動で候補の絞り込みができる
-(use-package company-dwim
-  :straight '(company-dwim
-              :type git
-              :host github
-              :repo "zk-phi/company-dwim")
-  :init
-  (define-key company-active-map (kbd "TAB") 'company-dwim)
-  (setq company-frontends
-      '(company-pseudo-tooltip-unless-just-one-frontend
-        company-dwim-frontend
-        company-echo-metadata-frontend)))
+  (custom-set-faces
+   '(corfu-default ((t (:height 1.0)))))
+  ;; lsp-modeでcorfuが起動するように設定する
+  ;(with-eval-after-load 'lsp-mode
+  ;  (setq lsp-completion-provider :none))
+  )
 
-;; カーソルの位置がどこであってもcompanyを起動できる
-(use-package company-anywhere
-  :straight '(company-anywhere
-              :type git
-              :host github
-              :repo "zk-phi/company-anywhere"))
+ (use-package prescient
+   :config
+   (setq prescient-aggressive-file-save t)
+   (prescient-persist-mode +1))
 
-;; プログラムの関数、変数のキーワード補完を強化
-(use-package company-same-mode-buffers
-  :straight '(company-same-mode-buffers
-              :type git
-              :host github
-              :repo "zk-phi/company-same-mode-buffers")
-  :after company
-  :init
-  (require 'company-same-mode-buffers)
-  (company-same-mode-buffers-initialize)
-  ;;
+ (use-package corfu-prescient
+   :after corfu
+   :config
+   (with-eval-after-load 'orderless
+     (setq corfu-prescient-enable-filtering nil))
+   (corfu-prescient-mode +1))
+
+
+(use-package kind-icon
+  :after corfu
+  :custom (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
   :config
-  (setq company-backends
-        '((company-capf :with company-same-mode-buffers)
-          (company-dabbrev-code :with company-same-mode-buffers)
-          company-keywords
-          company-files
-          company-dabbrev)))
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
 
 (use-package orderless
   :ensure t
@@ -217,5 +233,9 @@
 ; load files
 ; ----
 (add-to-list 'load-path "~/.emacs.d/conf/")
-(load "~/.emacs.d/conf/000-evil-func.el")
+;;(load "~/.emacs.d/conf/000-evil-func.el")
 
+
+(set-face-attribute 'default nil :family "Hack Nerd Font Mono" :height 160)
+(set-face-attribute 'corfu-default nil :family "Hack Nerd Font Mono" :height 1.0)
+(add-hook 'after-init-hook (lambda () (setq text-scale-mode-step 1.0)))

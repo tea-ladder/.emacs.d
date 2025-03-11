@@ -7,3 +7,6 @@ company-statistics-cache.el
 fonts/
 straight/
 bookmarks
+var/
+org/
+.cache/

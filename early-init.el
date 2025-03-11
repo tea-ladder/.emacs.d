@@ -6,17 +6,17 @@
 ;; coding UTF8
 (set-language-environment  'utf-8)
 (prefer-coding-system 'utf-8)
+
+;; UI
 (setq default-frame-alist
   '(
-    (height . 120)
-    (top . 0)
-    (left . 0)
     (fullscreen . maximized)
     (font . "-outline-Hack Nerd Font Mono-regular-normal-normal-mono-16-*-*-*-c-*-iso10646-1")
-    (alpha . 93)
+    (alpha . 99)
    )
 )
 
+(add-hook 'after-init-hook (lambda () (setq text-scale-mode-step 1.0)))
 ; ----
 ; preferences
 ; ----
@@ -53,3 +53,5 @@
 (setq shell-file-name explicit-shell-file-name)
 (add-to-list 'exec-path "C:/Users/tea-l/scoop/apps/git/current/bin/bash.exe")
 (add-hook 'shell-mode-hook '(lambda () (set-buffer-process-coding-system 'sjis 'sjis)))
+
+
