@@ -62,6 +62,7 @@
   (bind-key "a" 'neotree-hidden-file-toggle neotree-mode-map)
   (bind-key "<left>" 'neotree-select-up-node neotree-mode-map)
   (bind-key "<right>" 'neotree-change-root neotree-mode-map))
+
 ; ----
 ; evil
 ; ----
@@ -88,6 +89,9 @@
       "b"  'bookmark-jump
       "e"  'neotree-toggle
       "f"  'text-scale-adjust
+      (kbd "SPC i")  'org-clock-in
+      (kbd "SPC o")  'org-clock-out
+      (kbd "SPC c")  'org-capture
   )
   (defun bb/evil-delete (orig-fn beg end &optional type _ &rest args)
     (apply orig-fn beg end type ?_ args))
@@ -117,6 +121,7 @@
           (concat " " (nerd-icons-faicon "nf-fa-hand_o_right") " " cand)
         (concat "    " cand))))
   (vertico-mode +1))
+
 ; ----
 ; theme
 ; ----
@@ -124,6 +129,16 @@
   :config
   (load-theme 'kanagawa-wave t))
 
+; ----
+; tools
+; ----
+(use-package magit
+  :straight '(magit
+              :type git
+              :host github
+              :repo "magit/magit")
+
+  )
 ; ----
 ; LSP
 ; ----
@@ -234,8 +249,4 @@
 ; ----
 (add-to-list 'load-path "~/.emacs.d/conf/")
 ;;(load "~/.emacs.d/conf/000-evil-func.el")
-
-
-(set-face-attribute 'default nil :family "Hack Nerd Font Mono" :height 160)
-(set-face-attribute 'corfu-default nil :family "Hack Nerd Font Mono" :height 1.0)
-(add-hook 'after-init-hook (lambda () (setq text-scale-mode-step 1.0)))
+(load "~/.emacs.d/conf/001-org.el")

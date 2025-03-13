@@ -43,7 +43,6 @@
 (setq x-select-enable-clipboard t)
 ;; yes-or-noをy-or-nに変更
 (setq use-short-answers t)
-
 ; ----
 ; shell
 ; ----
