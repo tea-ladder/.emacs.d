@@ -139,6 +139,51 @@
               :repo "magit/magit")
 
   )
+
+(use-package centaur-tabs
+  :demand
+  :config
+  (setq centaur-tabs-set-groups nil)
+  (defun my/centaur-tabs-buffer-groups ()
+    (let ((buffer-name (buffer-name)))
+      (cond
+       ;; 以下はdefault
+       ((string-prefix-p "*" (buffer-name))
+        '("default"))
+       ((derived-mode-p 'dired-mode 'magit-mode)
+        '("default"))
+
+       (t
+        '("main")))))
+  (defun my/centaur-tabs-hide-tab (x)
+    "特定のバッファをタブに表示させない"
+    (let ((name (format "%s" x)))
+      (or
+       ;; current window is not dedicated window
+       (window-dedicated-p (selected-window))
+       ;; すべての*で始まるバッファを非表示
+       (string-prefix-p "*" name)
+       ;; その他の特定のバッファも非表示
+       (string-prefix-p "*epc" name)
+       (string-prefix-p "*lsp" name)
+       (string-prefix-p "*tramp" name)
+       (string-prefix-p "*Mini" name)
+       (string-prefix-p "*help" name)
+       (string-prefix-p "*Help" name)
+       (string-prefix-p "*Messages*" name)
+       (derived-mode-p 'dired-mode 'magit-mode))))
+  (centaur-tabs-mode t)
+  (with-eval-after-load 'centaur-tabs
+    (setq centaur-tabs-buffer-groups-function #'my/centaur-tabs-buffer-groups)
+    (setq centaur-tabs-hide-tabs-function #'my/centaur-tabs-hide-tab))
+  (setq centaur-tabs-set-icons t)
+  (setq centaur-tabs-icon-type 'nerd-icons)
+  :bind
+  (:map evil-normal-state-map
+        ("C-<tab>" . centaur-tabs-forward-tab)
+        ("C-S-<tab>" . centaur-tabs-backwrd-tab)))
+
+       
 ; ----
 ; LSP
 ; ----
