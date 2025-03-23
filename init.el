@@ -295,3 +295,4 @@
 (add-to-list 'load-path "~/.emacs.d/conf/")
 ;;(load "~/.emacs.d/conf/000-evil-func.el")
 (load "~/.emacs.d/conf/001-org.el")
+(load "~/.emacs.d/conf/010-myfunc.el")
