@@ -289,6 +289,7 @@
   (pyvenv-mode 1)  ;; pyvenv を有効化
   (setq pyvenv-tracking-mode 1))  ;; 自動で仮想環境を切り替える
 
+
 ; ----
 ; load files
 ; ----
