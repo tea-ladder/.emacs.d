@@ -11,7 +11,7 @@
 (setq default-frame-alist
   '(
     (fullscreen . maximized)
-    (font . "-outline-Hack Nerd Font Mono-regular-normal-normal-mono-16-*-*-*-c-*-iso10646-1")
+    (font . "-outline-Hack Nerd Font Mono-regular-italic-normal-mono-*-*-*-*-c-*-iso10646-1")
     (alpha . 99)
    )
 )
