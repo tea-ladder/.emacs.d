@@ -138,6 +138,7 @@
               :host github
               :repo "magit/magit")
 
+  :config
   (advice-add 'magit-status :around
               (lambda (orig-fun &rest args)
                 ;; 現在のウィンドウ構成を :magit-fullscreen レジスタに保存
@@ -146,11 +147,11 @@
                 (apply orig-fun args)
                 ;; 他のウィンドウを削除してフルスクリーンにする
                 (delete-other-windows)))
-              ;; (オプション) Magit バッファを抜ける際に元のウィンドウ構成に戻す設定
-              ;; もし元のウィンドウ構成に戻したい場合は、以下のフックを追加します。
-              (add-hook 'magit-mode-quit-hook
-                        (lambda ()
-                          (jump-to-register :magit-fullscreen))))
+  ;; (オプション) Magit バッファを抜ける際に元のウィンドウ構成に戻す設定
+  ;; もし元のウィンドウ構成に戻したい場合は、以下のフックを追加します。
+  (add-hook 'magit-mode-quit-hook
+            (lambda ()
+              (jump-to-register :magit-fullscreen))))
 
 (use-package centaur-tabs
   :demand
