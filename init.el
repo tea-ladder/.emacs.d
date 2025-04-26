@@ -147,7 +147,7 @@
                 (apply orig-fun args)
                 ;; 他のウィンドウを削除してフルスクリーンにする
                 (delete-other-windows)))
-  (setq magit-git-executable "C:/Program Files/Git/cmd/git.exe"
+  (setq magit-git-executable "C:/Program Files/Git/cmd/git.exe")
   ;; (オプション) Magit バッファを抜ける際に元のウィンドウ構成に戻す設定
   ;; もし元のウィンドウ構成に戻したい場合は、以下のフックを追加します。
   (add-hook 'magit-mode-quit-hook
